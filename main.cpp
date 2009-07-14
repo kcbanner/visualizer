@@ -41,7 +41,7 @@ bool init()
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
 
-    gluPerspective(60.0f, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
+    gluPerspective(90.0f, (GLfloat)WINDOW_WIDTH/(GLfloat)WINDOW_HEIGHT, 0.1f, 100.0f);
 
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity();
@@ -76,22 +76,39 @@ int main(int argc, char* argv[])
         glLoadIdentity ();
 
         glTranslatef(-1.5f,0.0f,-6.0f);
-        glBegin(GL_TRIANGLES);
-		glVertex3f( 0.0f, 1.0f, 0.0f);
-		glVertex3f(-1.0f,-1.0f, 0.0f);
-		glVertex3f( 1.0f,-1.0f, 0.0f);
-        glEnd();
+        glBegin( GL_TRIANGLES );           /* Drawing Using Triangles       */
+        glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
+        glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle (Front)       */
+        glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
+        glVertex3f( -1.0f, -1.0f,  1.0f ); /* Left Of Triangle (Front)      */
+        glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
+        glVertex3f(  1.0f, -1.0f,  1.0f ); /* Right Of Triangle (Front)     */
 
-        glTranslatef(3.0f,0.0f,0.0f);
-        glBegin(GL_QUADS);						
-		glVertex3f(-1.0f, 1.0f, 0.0f);			
-		glVertex3f( 1.0f, 1.0f, 0.0f);			
-		glVertex3f( 1.0f,-1.0f, 0.0f);
-		glVertex3f(-1.0f,-1.0f, 0.0f);
+        glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
+        glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle (Right)       */
+        glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
+        glVertex3f(  1.0f, -1.0f,  1.0f ); /* Left Of Triangle (Right)      */
+        glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
+        glVertex3f(  1.0f, -1.0f, -1.0f ); /* Right Of Triangle (Right)     */
+
+        glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
+        glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle (Back)        */
+        glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
+        glVertex3f(  1.0f, -1.0f, -1.0f ); /* Left Of Triangle (Back)       */
+        glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
+        glVertex3f( -1.0f, -1.0f, -1.0f ); /* Right Of Triangle (Back)      */
+
+        glColor3f(   1.0f,  0.0f,  0.0f ); /* Red                           */
+        glVertex3f(  0.0f,  1.0f,  0.0f ); /* Top Of Triangle (Left)        */
+        glColor3f(   0.0f,  0.0f,  1.0f ); /* Blue                          */
+        glVertex3f( -1.0f, -1.0f, -1.0f ); /* Left Of Triangle (Left)       */
+        glColor3f(   0.0f,  1.0f,  0.0f ); /* Green                         */
+        glVertex3f( -1.0f, -1.0f,  1.0f ); /* Right Of Triangle (Left)      */
         glEnd();
         
         glFlush();
-        SDL_GL_SwapBuffers();       
+        glFinish();
+        SDL_GL_SwapBuffers();
         
         while (SDL_PollEvent(&event))
         {
