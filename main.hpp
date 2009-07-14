@@ -5,7 +5,10 @@
 #include <GL/glew.h>
 #include <GL/glu.h>
 #include <GL/glut.h>
+#include <fmodex/fmod.hpp>
+#include <fmodex/fmod_errors.h>
 
+#include "util.h"
 #include "textfile.h"
 
 #endif

@@ -10,39 +10,8 @@ GLuint p;
 GLuint v;
 GLuint f;
 
-void printShaderInfoLog(GLuint obj)
-{
-    int infologLength = 0;
-    int charsWritten  = 0;
-    char *infoLog;
-
-    glGetShaderiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
-
-    if (infologLength > 0)
-    {
-        infoLog = (char *)malloc(infologLength);
-        glGetShaderInfoLog(obj, infologLength, &charsWritten, infoLog);
-        printf("%s\n",infoLog);
-        free(infoLog);
-    }
-}
-
-void printProgramInfoLog(GLuint obj)
-{
-    int infologLength = 0;
-    int charsWritten  = 0;
-    char *infoLog;
-
-    glGetProgramiv(obj, GL_INFO_LOG_LENGTH,&infologLength);
-
-    if (infologLength > 0)
-    {
-        infoLog = (char *)malloc(infologLength);
-        glGetProgramInfoLog(obj, infologLength, &charsWritten, infoLog);
-        printf("%s\n",infoLog);
-        free(infoLog);
-    }
-}
+FMOD_RESULT result;
+FMOD::System *fmod_system;
 
 void shader_init() {
 	
@@ -128,6 +97,10 @@ bool init()
     glDepthFunc(GL_LEQUAL);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+   
+    
     // GLEW
     glewInit();
     if (GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
@@ -146,6 +119,20 @@ bool init()
     
     // Misc
     SDL_WM_SetCaption( "Lovin it!", NULL );
+
+
+    // FMOD
+    // Create the main system object.
+    result = FMOD::System_Create(&fmod_system);		
+    FMODErrorCheck(result);
+    
+    // Initialize FMOD.
+    result = fmod_system->init(100, FMOD_INIT_NORMAL, 0);	
+    FMODErrorCheck(result);
+
+    //fmod_system->setOutput(FMOD_OUTPUTTYPE_NOSOUND);
+    
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     
     return true;
 }
@@ -161,32 +148,40 @@ int main(int argc, char* argv[])
 
     shader_init();
 
-
     // Uniform locations
     GLint time_loc = glGetUniformLocation(p, "time");
-
+    GLint amplitude_loc = glGetUniformLocation(p, "amplitude");
+    
     // Sphere
     GLUquadric* quadric = gluNewQuadric();
-    
-
+    gluQuadricNormals(quadric, GLU_SMOOTH);
+    gluQuadricTexture(quadric, GL_TRUE);
     
     bool quit = false;
     while (quit == false)
     {
+        // OpenGL
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glLoadIdentity ();
 
         // Uniforms for shaders
         glUniform1f(time_loc, (GLfloat)SDL_GetTicks()*0.001);
-                
-        glTranslatef(0.0f,0.0f,-6.0f);
-        gluSphere(quadric, 1.0f, 20, 20);
+        glUniform1f(amplitude_loc, (GLfloat) (rand()%2));
+
+        glTranslatef(0.0f, 0.0f, -15.0f);
+        glColor4f(1.0f, 0.4f, 0.3f, 0.5f);
         
+        
+        gluSphere(quadric, 1.0f, 10, 10);
+
         glFlush();
         glFinish();
-        
         SDL_GL_SwapBuffers();
-        
+
+        // FMOD
+        fmod_system->update();
+
+        // SDL
         while (SDL_PollEvent(&event))
         {
             if( event.type == SDL_QUIT )
@@ -195,7 +190,6 @@ int main(int argc, char* argv[])
             }
         }
     }
-
     
     SDL_Quit();
     return 0;
