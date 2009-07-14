@@ -6,4 +6,6 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 
+#include "textfile.h"
+
 #endif
