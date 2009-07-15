@@ -5,15 +5,16 @@ uniform float speed;
 varying vec4 diffuse,ambient;
 varying vec3 normal,lightDir,halfVector;
 
+const float PI = 3.1415926535;
+
 void main(void)
 {
    vec4 v = vec4(gl_Vertex);
 
    // Surface Waves    
-   v.xyz = v.xyz + amplitude*gl_Normal*sin(v.x + speed*time);
-   v.xyz = v.xyz + amplitude*gl_Normal*sin(v.y + speed*time);
-   v.xyz = v.xyz + amplitude*gl_Normal*sin(v.z + speed*time);
- 
+   v.xyz = v.xyz + amplitude*gl_Normal*sin(2.0*PI*v.x + speed*time);
+   v.xyz = v.xyz + amplitude*gl_Normal*sin(2.0*PI*v.y + speed*time);
+   
    // Pulse
    v.xyz = v.xyz + amplitude*gl_Normal*sin(speed*time);
 

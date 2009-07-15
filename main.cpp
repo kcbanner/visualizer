@@ -14,39 +14,39 @@ FMOD_RESULT result;
 FMOD::System *fmod_system;
 
 void shader_init() {
-	
+
     char *vs,*fs;
-	
+
     v = glCreateShader(GL_VERTEX_SHADER);
-    f = glCreateShader(GL_FRAGMENT_SHADER);	
+    f = glCreateShader(GL_FRAGMENT_SHADER);
 
     vs = textFileRead("vert.glsl");
     fs = textFileRead("frag.glsl");
-	
+
     const char * vv = vs;
     const char * ff = fs;
-	
+
     glShaderSource(v, 1, &vv,NULL);
     glShaderSource(f, 1, &ff,NULL);
-	
+
     free(vs);
     free(fs);
-	
+
     glCompileShader(v);
     printShaderInfoLog(v);
 
     glCompileShader(f);
     printShaderInfoLog(f);
-	
+
     p = glCreateProgram();
-	
+
     glAttachShader(p,v);
     glAttachShader(p,f);
-	
+
     glLinkProgram(p);
     printProgramInfoLog(p);
-    
-    glUseProgram(p);    
+
+    glUseProgram(p);
 }
 
 bool init()
@@ -98,7 +98,7 @@ bool init()
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    
+
     // GLEW
     glewInit();
     if (GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
@@ -114,27 +114,26 @@ bool init()
         printf("OpenGL 2.0 not supported\n");
         return false;
     }
-    
+
     // Misc
     SDL_WM_SetCaption( "Lovin it!", NULL );
 
 
     // FMOD
     // Create the main system object.
-    result = FMOD::System_Create(&fmod_system);		
+    result = FMOD::System_Create(&fmod_system);
     FMODErrorCheck(result);
-    
+
     // Initialize FMOD.
-    result = fmod_system->init(100, FMOD_INIT_NORMAL, 0);	
+    result = fmod_system->init(100, FMOD_INIT_NORMAL, 0);
     FMODErrorCheck(result);
 
     //fmod_system->setOutput(FMOD_OUTPUTTYPE_NOSOUND);
-    
+
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    
+
     return true;
 }
-
 
 int main(int argc, char* argv[])
 {
@@ -152,7 +151,7 @@ int main(int argc, char* argv[])
     GLint speed_loc = glGetUniformLocation(p, "speed");
 
     // Scene
-    // 
+    //
     // Sphere
     GLUquadric* quadric = gluNewQuadric();
     gluQuadricNormals(quadric, GLU_SMOOTH);
@@ -161,7 +160,7 @@ int main(int argc, char* argv[])
 
     // Lights
     GLfloat light_0_ambient[] = {0.5f, 0.5f, 0.5f, 1.0f};
-    GLfloat light_0_diffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    GLfloat light_0_diffuse[] = {0.5f, 0.5f, 0.5f, 1.0f};
     GLfloat light_0_position[] = {0.0f, 0.0f, 1.0f, 0.0f};
     glLightfv(GL_LIGHT0, GL_AMBIENT, light_0_ambient);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_0_diffuse);
@@ -169,7 +168,7 @@ int main(int argc, char* argv[])
     glEnable(GL_LIGHT0);
     glEnable(GL_LIGHTING);
     glEnable(GL_COLOR_MATERIAL);
-    
+
     bool quit = false;
     while (quit == false)
     {
@@ -179,14 +178,13 @@ int main(int argc, char* argv[])
 
         // Uniforms for shaders
         glUniform1f(time_loc, (GLfloat)SDL_GetTicks()*0.001);
-        glUniform1f(amplitude_loc, 0.5f);
-        glUniform1f(speed_loc, 5.0f);
+        glUniform1f(amplitude_loc, 0.2f);
+        glUniform1f(speed_loc, 20.0f);
 
-       
         glTranslatef(0.0f, 0.0f, -60.0f);
-        glColor4f(1.0f, 0.5f, 0.5f, 0.5f);
-        gluSphere(quadric, 10.0f, 32, 32);
-        
+        glColor4f(0.3f, 0.8f, 0.8f, 1.0f);
+        gluSphere(quadric, 10.0f, 40, 40);
+
         glFlush();
         glFinish();
         SDL_GL_SwapBuffers();
@@ -203,7 +201,7 @@ int main(int argc, char* argv[])
             }
         }
     }
-    
+
     SDL_Quit();
     return 0;
 }
