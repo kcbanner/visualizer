@@ -7,6 +7,7 @@
 #include <GL/glut.h>
 #include <fmodex/fmod.hpp>
 #include <fmodex/fmod_errors.h>
+#include <math.h>
 
 #include "util.h"
 #include "textfile.h"

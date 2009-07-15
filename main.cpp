@@ -98,8 +98,6 @@ bool init()
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-
-   
     
     // GLEW
     glewInit();
@@ -132,7 +130,7 @@ bool init()
 
     //fmod_system->setOutput(FMOD_OUTPUTTYPE_NOSOUND);
     
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     
     return true;
 }
@@ -151,11 +149,26 @@ int main(int argc, char* argv[])
     // Uniform locations
     GLint time_loc = glGetUniformLocation(p, "time");
     GLint amplitude_loc = glGetUniformLocation(p, "amplitude");
-    
+    GLint speed_loc = glGetUniformLocation(p, "speed");
+
+    // Scene
+    // 
     // Sphere
     GLUquadric* quadric = gluNewQuadric();
     gluQuadricNormals(quadric, GLU_SMOOTH);
     gluQuadricTexture(quadric, GL_TRUE);
+    gluQuadricOrientation(quadric, GLU_OUTSIDE);
+
+    // Lights
+    GLfloat light_0_ambient[] = {0.5f, 0.5f, 0.5f, 1.0f};
+    GLfloat light_0_diffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    GLfloat light_0_position[] = {0.0f, 0.0f, 1.0f, 0.0f};
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light_0_ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light_0_diffuse);
+    glLightfv(GL_LIGHT0, GL_POSITION, light_0_position);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_COLOR_MATERIAL);
     
     bool quit = false;
     while (quit == false)
@@ -166,14 +179,14 @@ int main(int argc, char* argv[])
 
         // Uniforms for shaders
         glUniform1f(time_loc, (GLfloat)SDL_GetTicks()*0.001);
-        glUniform1f(amplitude_loc, (GLfloat) (rand()%2));
+        glUniform1f(amplitude_loc, 0.5f);
+        glUniform1f(speed_loc, 5.0f);
 
-        glTranslatef(0.0f, 0.0f, -15.0f);
-        glColor4f(1.0f, 0.4f, 0.3f, 0.5f);
+       
+        glTranslatef(0.0f, 0.0f, -60.0f);
+        glColor4f(1.0f, 0.5f, 0.5f, 0.5f);
+        gluSphere(quadric, 10.0f, 32, 32);
         
-        
-        gluSphere(quadric, 1.0f, 10, 10);
-
         glFlush();
         glFinish();
         SDL_GL_SwapBuffers();
