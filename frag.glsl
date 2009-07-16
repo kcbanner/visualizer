@@ -1,13 +1,18 @@
+uniform sampler2D texture;
+
+uniform float high_freq;
+uniform float low_freq;
+
 varying vec4 diffuse,ambient;
 varying vec3 normal,lightDir,halfVector;
-   
+
 void main(void)
 {
    vec3 n, halfV;
    float intensity, hv_intensity;
 
    vec4 color = ambient;
-   
+
    n = normalize(normal);
    intensity = max(dot(n,lightDir),0.0);
 

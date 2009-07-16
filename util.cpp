@@ -1,5 +1,14 @@
 #include "util.h"
 
+void arrayCopy(int length, float* a, float* b)
+{
+    int i;
+    for(i = 0; i < length; i++)
+    {
+        b[i] = a[i];
+    }
+}
+
 void FMODErrorCheck(FMOD_RESULT result)
 {
     if (result != FMOD_OK)
