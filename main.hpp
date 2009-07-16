@@ -9,6 +9,7 @@
 #include <fmodex/fmod_errors.h>
 #include <math.h>
 #include <tchar.h>
+#include <string>
 
 #include "util.h"
 #include "textfile.h"

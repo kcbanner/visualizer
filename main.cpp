@@ -1,9 +1,11 @@
 #include "main.hpp"
 
 // SDL
-int WINDOW_WIDTH = 800;
-int WINDOW_HEIGHT = 600;
+int WINDOW_WIDTH = 1024;
+int WINDOW_HEIGHT = 768;
 int WINDOW_BIT_DEPTH = 24;
+
+bool fullscreen = false;
 
 SDL_Event event;
 
@@ -18,6 +20,9 @@ const int FBO_TEXTURE_WIDTH = 256;
 const int FBO_TEXTURE_HEIGHT = 256;
 
 // Audio
+bool record = false;
+char* sound_file;
+
 FMOD_RESULT result;
 FMOD_CREATESOUNDEXINFO exinfo;
 FMOD::System *fmod_system;
@@ -86,10 +91,15 @@ bool init()
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 1);
 
     // Initialize context
     SDL_Surface* drawContext;
     Uint32 flags = SDL_OPENGL | SDL_DOUBLEBUF;
+    if(fullscreen)
+    {
+        flags = flags | SDL_FULLSCREEN;
+    }
     drawContext = SDL_SetVideoMode(WINDOW_WIDTH,
                                    WINDOW_HEIGHT,
                                    WINDOW_BIT_DEPTH,
@@ -123,7 +133,7 @@ bool init()
     if (GLEW_ARB_vertex_shader && GLEW_ARB_fragment_shader)
         printf("GLSL Supported\n");
     else {
-        printf("No GLSL");
+        printf("No GLSL! Are you from 1990?");
         return false;
     }
 
@@ -152,7 +162,7 @@ bool init()
     result = fmod_system->getNumDrivers(&num_drivers);
     FMODErrorCheck(result);
 
-    printf("Output drivers: %i\n", num_drivers);
+    printf("\nOutput drivers: %i\n", num_drivers);
     for (count=0; count < num_drivers; count++)
     {
         char name[256];
@@ -168,7 +178,7 @@ bool init()
     result = fmod_system->getRecordNumDrivers(&num_drivers);
     FMODErrorCheck(result);
 
-    printf("Recording drivers: %i\n", num_drivers);
+    printf("\nRecording drivers: %i\n", num_drivers);
     for (count=0; count < num_drivers; count++)
     {
         char name[256];
@@ -191,25 +201,35 @@ bool init()
     exinfo.numchannels      = 1;
     exinfo.format           = FMOD_SOUND_FORMAT_PCM16;
     exinfo.defaultfrequency = output_rate;
-    exinfo.length           = exinfo.defaultfrequency * sizeof(short) * exinfo.numchannels * 10;
+    exinfo.length           = exinfo.defaultfrequency * sizeof(short) * exinfo.numchannels * 3;
 
-    result = fmod_system->createSound("12.mp3", FMOD_2D | FMOD_SOFTWARE, 0, &sound);
-    FMODErrorCheck(result);
+    if(record == false)
+    {
+        result = fmod_system->createSound(sound_file, FMOD_2D | FMOD_SOFTWARE, 0, &sound);
+        FMODErrorCheck(result);
+    }
+    else
+    {
+        result = fmod_system->createSound(0, FMOD_2D | FMOD_SOFTWARE | FMOD_OPENUSER, &exinfo, &sound);
+        FMODErrorCheck(result);
 
-    //result = fmod_system->createSound(0, FMOD_2D | FMOD_SOFTWARE | FMOD_OPENUSER, &exinfo, &sound);
-    //FMODErrorCheck(result);
+        result = fmod_system->recordStart(0, sound, true);
+        FMODErrorCheck(result);
 
-    //result = fmod_system->recordStart(0, sound, true);
-    //FMODErrorCheck(result);
-
-    SDL_Delay(latency);
+        SDL_Delay(latency);
+    }
 
     sound->setMode(FMOD_LOOP_NORMAL);
     result = fmod_system->playSound(FMOD_CHANNEL_REUSE, sound, false, &channel);
     FMODErrorCheck(result);
 
-    // Check latencies
+    if(record)
+    {
+        result = channel->setMute(true);
+        FMODErrorCheck(result);
+    }
 
+    // Check latencies
     unsigned int blocksize;
     int numblocks;
     float ms;
@@ -220,11 +240,9 @@ bool init()
 
     ms = (float)blocksize * 1000.0f / (float)frequency;
 
-    printf("Mixer blocksize        = %.02f ms\n", ms);
+    printf("\nMixer blocksize        = %.02f ms\n", ms);
     printf("Mixer Total buffersize = %.02f ms\n", ms * numblocks);
     printf("Mixer Average Latency  = %.02f ms\n", ms * ((float)numblocks - 1.5f));
-
-
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -233,11 +251,46 @@ bool init()
 
 int main(int argc, char* argv[])
 {
+    // Args
+    if(argc > 1)
+    {
+        if(!strcmp(argv[1], "-r"))
+        {
+            printf("Record mode, will use default recording device.\n\n");
+            record = true;
+        }
+        else
+        {
+            record = false;
+            printf("Going to play %s\n\n", argv[1]);
+            sound_file = argv[1];
+        }
+        if(argc > 2)
+        {
+            if(!strcmp(argv[2], "-f"))
+            {
+                fullscreen = true;
+            }
+            if(argc > 4)
+            {
+                WINDOW_WIDTH = atoi(argv[3]);
+                WINDOW_HEIGHT = atoi(argv[4]);
+            }
+        }
+    }
+    else
+    {
+        printf("Usage: visualizer -r [-f width height]\n       visualizer <filename> [-f width height]\n\n -r: record from default audio source\n  filename: audio file to play\n\n -f width height: fullscreen at width*height resolution.\n", argv[0]);
+        return 0;
+    }
+
     // Intialize SDL, OpenGL context, etc.
     if (init() == false)
     {
         return -1;
     }
+
+    printf("\nInitialization complete. Enjoy!\n");
 
     shader_init();
 
@@ -308,14 +361,24 @@ int main(int argc, char* argv[])
     while (quit == false)
     {
         // Grab spectrums
-        result = fmod_system->getSpectrum(instant_spectrum_l, 256, 0, FMOD_DSP_FFT_WINDOW_RECT);
-        result = fmod_system->getSpectrum(instant_spectrum_r, 256, 1, FMOD_DSP_FFT_WINDOW_RECT);
+        result = channel->getSpectrum(instant_spectrum_l, 256, 0, FMOD_DSP_FFT_WINDOW_RECT);
+        if(!record)
+        {
+            result = channel->getSpectrum(instant_spectrum_r, 256, 1, FMOD_DSP_FFT_WINDOW_RECT);
+        }
         FMODErrorCheck(result);
 
         // Merge stereo
         for(i = 0; i < 256; i++)
         {
-            instant_spectrum[i] = 10.0f * (float)log10((instant_spectrum_l[i] + instant_spectrum_r[i])/2.0f) * 2.0f;
+            if(record)
+            {
+                instant_spectrum[i] = 10.0f * (float)log10(instant_spectrum_l[i]/2.0f) * 2.0f;
+            }
+            else
+            {
+                instant_spectrum[i] = 10.0f * (float)log10((instant_spectrum_l[i] + instant_spectrum_r[i])/2.0f) * 2.0f;
+            }
         }
         //instant_spectrum[255] = 0;
 
@@ -510,14 +573,26 @@ int main(int argc, char* argv[])
         // SDL
         while (SDL_PollEvent(&event))
         {
-            if( event.type == SDL_QUIT )
+            if(event.type == SDL_QUIT)
             {
                 quit = true;
+            }
+            else if(event.type == SDL_KEYDOWN)
+            {
+                switch(event.key.keysym.sym)
+                {
+                    case SDLK_ESCAPE:
+                        quit = true;
+                        break;
+                    case SDLK_f:
+                        break;
+                }
             }
         }
 
     }
 
+    fmod_system->release();
     SDL_Quit();
     return 0;
 }
