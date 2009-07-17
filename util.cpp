@@ -9,6 +9,36 @@ void arrayCopy(int length, float* a, float* b)
     }
 }
 
+float saturate(float x)
+{
+    if(x > 1.0)
+    {
+        return 1.0f;
+    }
+    else if(x < 0.0)
+    {
+        return 0.0f;
+    }
+    else
+    {
+        return x;
+    }
+}
+
+float normalize(float a, float b)
+{
+    return abs(a-b)/(a+b);
+}
+
+float smoothstep(float edge0, float edge1, float x)
+{
+    // Scale, bias and saturate x to 0..1 range
+    x = saturate( (x-edge0) / (edge1-edge0));
+    // Evaluate polynomial
+    return x*x*(3-2*x);
+}
+
+
 void FMODErrorCheck(FMOD_RESULT result)
 {
     if (result != FMOD_OK)

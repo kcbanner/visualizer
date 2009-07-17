@@ -300,6 +300,7 @@ int main(int argc, char* argv[])
     GLint high_freq_loc = glGetUniformLocation(p, "high_freq");
     GLint low_freq_loc = glGetUniformLocation(p, "low_freq");
     GLint texture_loc = glGetUniformLocation(p, "texture");
+    GLint low_freq_max_loc = glGetUniformLocation(p, "low_freq_max");
 
     // Scene
     //
@@ -310,8 +311,8 @@ int main(int argc, char* argv[])
     gluQuadricOrientation(quadric, GLU_OUTSIDE);
 
     // Lights
-    GLfloat light_0_ambient[] = {0.5f, 0.5f, 0.5f, 1.0f};
-    GLfloat light_0_diffuse[] = {0.5f, 0.5f, 0.5f, 1.0f};
+    GLfloat light_0_ambient[] = {0.2f, 0.2f, 0.2f, 1.0f};
+    GLfloat light_0_diffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};
     GLfloat light_0_position[] = {0.0f, 0.0f, 1.0f, 0.0f};
     glLightfv(GL_LIGHT0, GL_AMBIENT, light_0_ambient);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light_0_diffuse);
@@ -357,6 +358,8 @@ int main(int argc, char* argv[])
     float instant_spectrum[256];
     float instant_spectrum_l[256];
     float instant_spectrum_r[256];
+
+    float rot_angle;
 
     while (quit == false)
     {
@@ -472,16 +475,17 @@ int main(int argc, char* argv[])
         mid_avg = mid_avg/64.0f;
         high_avg = high_avg/64.0f;
 
-
         float high_freq_avg = 0;
         float low_freq_avg  = 0;
+        float high_freq_max = spectrum_freq*(low_mid_max_index+1);
+        float low_freq_max = spectrum_freq*(low_max_index+1);
         for(i = 63; i >= 1; i = i-1)
         {
             low_freq_samples[i] = low_freq_samples[i-1];
             high_freq_samples[i] = high_freq_samples[i-1];
         }
-        high_freq_samples[0] = spectrum_freq*(high_max_index+1);
-        low_freq_samples[0] = spectrum_freq*(low_max_index+1);
+        high_freq_samples[0] = high_freq_max;
+        low_freq_samples[0] = low_freq_max;
 
         for(i = 0; i < 64; i++)
         {
@@ -494,12 +498,15 @@ int main(int argc, char* argv[])
         //printf("dominant high freq: %f dominant low freq: %f\n", high_freq_avg, low_freq_avg);
 
         // OpenGL
-
         // Uniforms for shaders
         glUniform1f(time_loc, (GLfloat)SDL_GetTicks()*0.001);
-        glUniform1f(amplitude_loc, 20.0f*low_mid_avg);
+        //glUniform1f(amplitude_loc, 8.0f*smoothstep(-1, 1, log(low_mid_max/low_mid_avg)));
+        glUniform1f(amplitude_loc, 0.5/normalize(low_avg, low_max));
         glUniform1f(high_freq_loc, high_freq_avg);
         glUniform1f(low_freq_loc, low_freq_avg);
+        glUniform1f(low_freq_max_loc, low_freq_max);
+
+        printf("low: %f  high: %f  midmax-mid %f\n", low_freq_avg, high_freq_avg, 1/normalize(low_avg, low_max));
 
         // Into the FBO
         glViewport(0, 0, FBO_TEXTURE_WIDTH, FBO_TEXTURE_HEIGHT);
@@ -535,9 +542,11 @@ int main(int argc, char* argv[])
         glBindTexture(GL_TEXTURE_2D, fbo_texture_id);
         glUniform1f(texture_loc, fbo_texture_id);
 
+        rot_angle += 0.9f;
+
         glTranslatef(0.0f, 0.0f, -40.0f);
-        glRotatef(35,0.0f,1.0f,0.0f);
-        glRotatef(35,0.0f,0.0f,1.0f);
+        glRotatef(rot_angle,0.0f,1.0f,0.0f);
+        glRotatef(20,0.0f,0.0f,1.0f);
         glColor4f(0.4f, 0.2f, 1.0f, 1.0f);
         gluSphere(quadric, 8.0f, 64, 64);
 
